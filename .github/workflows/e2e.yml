@@ -1,0 +1,89 @@
+name: End To End Test
+
+on:
+
+  workflow_dispatch:
+
+jobs:
+
+  e2e:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - run: echo "${{ secrets.SERVER_ENV }}" > server/.env
+      - run: echo "${{ secrets.WORKER_ENV }}" > worker/.env
+      - run: echo "${{ secrets.RUNNER_ENV }}" > runner/.env
+      - run: echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env
+
+      - name: Build
+        run: docker compose build
+
+      - name: Start
+        run: docker compose up -d
+
+      - name: Wait
+        run: sleep 20
+
+      # ----------------------
+      # Server
+      # ----------------------
+
+      - name: Server Health
+        run: |
+          curl --fail http://localhost:8000/health
+
+      # ----------------------
+      # Runner
+      # ----------------------
+
+      - name: Runner Health
+        run: |
+          curl --fail http://localhost:7001/health
+
+      # ----------------------
+      # Frontend
+      # ----------------------
+
+      - name: Frontend
+        run: |
+          curl --fail http://localhost:5173
+
+      # ----------------------
+      # Redis
+      # ----------------------
+
+      - name: Redis
+        run: |
+          docker exec redis redis-cli ping
+
+      # ----------------------
+      # Submit Build Job
+      # ----------------------
+
+      - name: Submit Job
+
+        run: |
+
+          curl \
+          -X POST \
+          http://localhost:8000/api/jobs \
+          -H "Content-Type: application/json" \
+          -d '{
+            "repoUrl":"https://github.com/octocat/Hello-World.git",
+            "branch":"master"
+          }'
+
+      - name: Wait Job
+        run: sleep 40
+
+      - name: Logs
+        if: failure()
+        run: docker compose logs
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
