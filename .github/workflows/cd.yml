@@ -68,10 +68,39 @@ jobs:
 
           script: |
 
-            cd ~/mini-ci
+            cd ~/mini-ci/puku-editor-Tanjim-Haider-8
 
+            echo "Updating Repository..."
+            git pull origin main
+
+            echo "Creating Environment Files..."
+
+            cat > server/.env <<'EOF'
+            ${{ secrets.SERVER_ENV }}
+            EOF
+
+            cat > worker/.env <<'EOF'
+            ${{ secrets.WORKER_ENV }}
+            EOF
+
+            cat > runner/.env <<'EOF'
+            ${{ secrets.RUNNER_ENV }}
+            EOF
+
+            cat > frontend/.env <<'EOF'
+            ${{ secrets.FRONTEND_ENV }}
+            EOF
+
+            echo "Pulling Latest Images..."
             docker compose pull
 
-            docker compose up -d
+            echo "Stopping Old Containers..."
+            docker compose down
 
-            docker image prune -f
+            echo "Starting New Containers..."
+            docker compose up -d --remove-orphans
+
+            echo "Removing Unused Images..."
+            docker image prune -af
+
+            echo "Deployment Completed Successfully"
