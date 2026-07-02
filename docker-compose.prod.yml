@@ -28,7 +28,7 @@ services:
   runner:
     image: tanjim100/ci-runner:latest
     ports:
-      - "7001:7000"
+      - "7000:7000"
     restart: always
     privileged: true
     env_file:
