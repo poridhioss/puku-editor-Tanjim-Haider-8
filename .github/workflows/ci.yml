@@ -1,0 +1,143 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  integration-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # -----------------------------
+      # Checkout
+      # -----------------------------
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # -----------------------------
+      # Create Environment Files
+      # -----------------------------
+
+      - name: Create Server Env
+        run: |
+          echo "${{ secrets.SERVER_ENV }}" > server/.env
+
+      - name: Create Worker Env
+        run: |
+          echo "${{ secrets.WORKER_ENV }}" > worker/.env
+
+      - name: Create Runner Env
+        run: |
+          echo "${{ secrets.RUNNER_ENV }}" > runner/.env
+
+      - name: Create Frontend Env
+        run: |
+          echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env
+
+      # -----------------------------
+      # Build Everything
+      # -----------------------------
+
+      - name: Build Services
+        run: docker compose build
+
+      # -----------------------------
+      # Start Everything
+      # -----------------------------
+
+      - name: Start Services
+        run: docker compose up -d
+
+      # -----------------------------
+      # Wait
+      # -----------------------------
+
+      - name: Wait
+        run: sleep 20
+
+      # -----------------------------
+      # Show Containers
+      # -----------------------------
+
+      - name: Running Containers
+        run: docker ps
+
+      # -----------------------------
+      # Server Health
+      # -----------------------------
+
+      - name: Check Server
+        run: |
+          curl --fail http://localhost:8000/health
+
+      # -----------------------------
+      # Frontend Health
+      # -----------------------------
+
+      - name: Check Frontend
+        run: |
+          curl --fail http://localhost:5173
+
+      # -----------------------------
+      # Runner Health
+      # -----------------------------
+
+      - name: Check Runner
+        run: |
+          curl --fail http://localhost:7001/health
+
+      # -----------------------------
+      # Redis
+      # -----------------------------
+
+      - name: Check Redis
+        run: |
+          docker exec redis redis-cli ping
+
+      # -----------------------------
+      # Submit Fake Build Job
+      # -----------------------------
+
+      - name: Submit Test Job
+        run: |
+          curl \
+          -X POST \
+          http://localhost:8000/api/jobs \
+          -H "Content-Type: application/json" \
+          -d '{
+            "repoUrl":"https://github.com/octocat/Hello-World.git",
+            "branch":"master"
+          }'
+
+      # -----------------------------
+      # Wait for Worker
+      # -----------------------------
+
+      - name: Wait For Job
+        run: sleep 40
+
+      # -----------------------------
+      # Show Logs
+      # -----------------------------
+
+      - name: Docker Logs
+        if: failure()
+        run: docker compose logs
+
+      # -----------------------------
+      # Cleanup
+      # -----------------------------
+
+      - name: Shutdown
+        if: always()
+        run: docker compose down -v

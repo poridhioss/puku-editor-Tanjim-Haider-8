@@ -1,0 +1,78 @@
+services:
+
+  # ---------------- REDIS ----------------
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+  # ---------------- SERVER ----------------
+  server:
+    build: ./server
+    container_name: ci-server
+
+    restart: unless-stopped
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - redis
+
+    env_file:
+      - ./server/.env
+
+  # ---------------- WORKER ----------------
+  worker:
+    build: ./worker
+    container_name: ci-worker
+
+    restart: unless-stopped
+
+    depends_on:
+      - redis
+      - server
+      - runner
+
+    env_file:
+      - ./worker/.env
+
+  # ---------------- RUNNER ----------------
+  runner:
+    build: ./runner
+    container_name: ci-runner
+
+    restart: unless-stopped
+
+    privileged: true
+
+    ports:
+      - "7001:7000"
+
+    depends_on:
+      - server
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    env_file:
+      - ./runner/.env
+
+  # ---------------- FRONTEND ----------------
+  frontend:
+    build: ./frontend
+    container_name: ci-frontend
+
+    restart: unless-stopped
+
+    ports:
+      - "5173:5173"
+
+    depends_on:
+      - server
+
+    env_file:
+      - ./frontend/.env
