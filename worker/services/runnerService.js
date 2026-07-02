@@ -6,7 +6,7 @@ async function assignToRunner(job) {
   );
 
   await axios.post(
-    "http://runner:7000/execute",
+    `${process.env.RUNNER_URL}/execute`,
     {
       jobId: job.data.id,
       repoUrl: job.data.repoUrl,

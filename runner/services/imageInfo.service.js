@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const SERVER_URL = "http://server:8000";
+const SERVER_URL = process.env.SERVER_URL || "http://server:8000";
 
 async function sendImage(data){
 

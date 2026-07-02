@@ -6,6 +6,10 @@ const app = express();
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("Runner is running very fast.");
+})
+
 app.get("/health", (req, res) => {
 
   res.status(200).json({
