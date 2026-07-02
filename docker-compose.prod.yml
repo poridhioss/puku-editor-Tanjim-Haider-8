@@ -8,6 +8,8 @@ services:
 
   server:
     image: tanjim100/ci-server:latest
+    ports:
+    - "8000:5000"
     restart: always
     env_file:
       - server/.env
@@ -25,6 +27,8 @@ services:
 
   runner:
     image: tanjim100/ci-runner:latest
+    ports:
+      - "7001:7000"
     restart: always
     privileged: true
     env_file:
@@ -36,6 +40,8 @@ services:
 
   frontend:
     image: tanjim100/ci-frontend:latest
+    ports:
+      - "5173:5173"
     restart: always
     env_file:
       - frontend/.env
