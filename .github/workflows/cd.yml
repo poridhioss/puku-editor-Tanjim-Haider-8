@@ -3,7 +3,8 @@ name: CD Pipeline
 on:
 
   workflow_run:
-    workflows: ["CI Pipeline"]
+    workflows:
+      - CI Pipeline
     types:
       - completed
 
@@ -11,53 +12,47 @@ jobs:
 
   deploy:
 
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: github.event.workflow_run.conclusion == 'success'
 
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # ----------------------------
-      # Create env files
-      # ----------------------------
+      - name: Create Server Env
+        run: echo '${{ secrets.SERVER_ENV }}' > server/.env
 
-      - run: echo "${{ secrets.SERVER_ENV }}" > server/.env
-      - run: echo "${{ secrets.WORKER_ENV }}" > worker/.env
-      - run: echo "${{ secrets.RUNNER_ENV }}" > runner/.env
-      - run: echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env
+      - name: Create Worker Env
+        run: echo '${{ secrets.WORKER_ENV }}' > worker/.env
 
-      # ----------------------------
-      # Login DockerHub
-      # ----------------------------
+      - name: Create Runner Env
+        run: echo '${{ secrets.RUNNER_ENV }}' > runner/.env
 
-      - name: Login DockerHub
+      - name: Create Frontend Env
+        run: echo '${{ secrets.FRONTEND_ENV }}' > frontend/.env
+
+      - name: DockerHub Login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
-      # ----------------------------
-      # Build Images
-      # ----------------------------
-
       - name: Build Images
-        run: docker compose -f docker-compose.yml build
-
-      # ----------------------------
-      # Push Images
-      # ----------------------------
+        run: |
+          docker build -t tanjim100/ci-server:latest ./server
+          docker build -t tanjim100/ci-worker:latest ./worker
+          docker build -t tanjim100/ci-runner:latest ./runner
+          docker build -t tanjim100/ci-frontend:latest ./frontend
 
       - name: Push Images
-        run: docker compose -f docker-compose.yml push
+        run: |
+          docker push tanjim100/ci-server:latest
+          docker push tanjim100/ci-worker:latest
+          docker push tanjim100/ci-runner:latest
+          docker push tanjim100/ci-frontend:latest
 
-      # ----------------------------
-      # SSH into EC2
-      # ----------------------------
-
-      - name: Deploy to AWS
+      - name: Deploy EC2
         uses: appleboy/ssh-action@v1.2.2
 
         with:
@@ -68,12 +63,11 @@ jobs:
 
           script: |
 
+            set -e
+
             cd ~/mini-ci/puku-editor-Tanjim-Haider-8
 
-            echo "Updating Repository..."
             git pull origin main
-
-            echo "Creating Environment Files..."
 
             cat > server/.env <<'EOF'
             ${{ secrets.SERVER_ENV }}
@@ -91,16 +85,10 @@ jobs:
             ${{ secrets.FRONTEND_ENV }}
             EOF
 
-            echo "Pulling Latest Images..."
-            docker compose pull
+            docker compose -f docker-compose.prod.yml pull
 
-            echo "Stopping Old Containers..."
-            docker compose down
+            docker compose -f docker-compose.prod.yml down
 
-            echo "Starting New Containers..."
-            docker compose up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml up -d
 
-            echo "Removing Unused Images..."
             docker image prune -af
-
-            echo "Deployment Completed Successfully"
