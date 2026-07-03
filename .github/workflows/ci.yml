@@ -49,14 +49,14 @@ jobs:
       # -----------------------------
 
       - name: Build Services
-        run: docker compose build
+        run: docker compose -f docker-compose.prod.yml build
 
       # -----------------------------
       # Start Everything
       # -----------------------------
 
       - name: Start Services
-        run: docker compose up -d
+        run: docker compose -f docker-compose.prod.yml up -d
 
       # -----------------------------
       # Wait
@@ -132,7 +132,7 @@ jobs:
 
       - name: Docker Logs
         if: failure()
-        run: docker compose logs
+        run: docker compose -f docker-compose.prod.yml logs
 
       # -----------------------------
       # Cleanup
@@ -140,4 +140,4 @@ jobs:
 
       - name: Shutdown
         if: always()
-        run: docker compose down -v
+        run: docker compose -f docker-compose.prod.yml down -v
