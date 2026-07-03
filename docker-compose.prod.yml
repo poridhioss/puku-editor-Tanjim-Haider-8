@@ -1,49 +1,57 @@
-version: "3.8"
-
 services:
 
   redis:
-    image: redis:7
-    restart: always
+    image: redis:7-alpine
+    restart: unless-stopped
 
   server:
     image: tanjim100/ci-server:latest
+    restart: unless-stopped
+
     ports:
-    - "8000:8000"
-    restart: always
+      - "8000:8000"
+
     env_file:
       - server/.env
+
     depends_on:
       - redis
 
   worker:
     image: tanjim100/ci-worker:latest
-    restart: always
+    restart: unless-stopped
+
     env_file:
       - worker/.env
+
     depends_on:
       - redis
       - server
 
   runner:
     image: tanjim100/ci-runner:latest
+    restart: unless-stopped
+
+    privileged: true
+
     ports:
       - "7000:7000"
-    restart: always
-    privileged: true
+
     env_file:
       - runner/.env
+
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
     depends_on:
       - server
 
   frontend:
     image: tanjim100/ci-frontend:latest
+    restart: unless-stopped
+
     ports:
-      - "5173:5173"
-    restart: always
-    env_file:
-      - frontend/.env
+      - "80:80"
+
     depends_on:
       - server

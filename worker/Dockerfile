@@ -1,11 +1,13 @@
-FROM node:latest
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 
-COPY package.json .
+COPY package*.json ./
 
-RUN npm install
+RUN npm ci --omit=dev
 
 COPY . .
+
+ENV NODE_ENV=production
 
 CMD ["npm", "start"]
