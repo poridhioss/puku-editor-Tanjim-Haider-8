@@ -50,7 +50,7 @@ services:
     privileged: true
 
     ports:
-      - "7001:7000"
+      - "7000:7000"
 
     depends_on:
       - server
@@ -65,7 +65,7 @@ services:
   frontend:
     build: 
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      
     container_name: ci-frontend
 
     restart: unless-stopped

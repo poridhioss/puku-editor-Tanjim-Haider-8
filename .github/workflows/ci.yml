@@ -86,7 +86,7 @@ jobs:
 
       - name: Check Frontend
         run: |
-          curl --fail http://localhost:80
+          curl --fail http://localhost:5173
 
       # -----------------------------
       # Runner Health
@@ -94,7 +94,7 @@ jobs:
 
       - name: Check Runner
         run: |
-          curl --fail http://localhost:7001/health
+          curl --fail http://localhost:7000/health
 
       # -----------------------------
       # Redis
