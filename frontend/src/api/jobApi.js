@@ -1,5 +1,5 @@
 export async function createJob(data) {
-  const res = await fetch("http://localhost:8000/api/jobs", {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/jobs`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
