@@ -86,7 +86,7 @@ jobs:
 
       - name: Check Frontend
         run: |
-          curl --fail http://localhost:5173
+          curl --fail http://localhost
 
       # -----------------------------
       # Runner Health
