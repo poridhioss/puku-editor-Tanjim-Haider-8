@@ -10,6 +10,7 @@ export default function Home() {
       <h1 className="text-3xl font-bold mb-6">
         Mini CI/CD Dashboard
       </h1>
+      <p>There must be a dockerfile in the repo</p>
 
       <JobForm setJobs={setJobs} />
 
