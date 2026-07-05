@@ -50,7 +50,7 @@ services:
     privileged: true
 
     ports:
-      - "7000:7000"
+      - "7001:7000"
 
     depends_on:
       - server

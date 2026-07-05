@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import Job from "./pages/Job";
 
+// Per-job view is rendered inside the JobCard modal pattern (see
+// components/JobModal.jsx). No standalone /job/:id route is needed.
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        {/* <Route path="/job/:id" element={<Job />} /> */}
       </Routes>
     </BrowserRouter>
   );

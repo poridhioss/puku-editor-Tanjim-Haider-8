@@ -1,3 +1,178 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  color-scheme: dark;
+
+  /* GH Actions inspired palette */
+  --gh-bg: #0d1117;
+  --gh-bg-elevated: #161b22;
+  --gh-border: #30363d;
+  --gh-border-muted: #21262d;
+  --gh-text: #e6edf3;
+  --gh-text-muted: #8b949e;
+  --gh-text-dim: #6e7681;
+  --gh-accent: #2f81f7;
+
+  --status-queued: #d29922;
+  --status-running: #2f81f7;
+  --status-success: #3fb950;
+  --status-failed: #f85149;
+  --status-cloned: #a371f7;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--gh-bg);
+  color: var(--gh-text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Polished scrollbars in dark theme */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+  background-clip: content-box;
+  border: 2px solid transparent;
+}
+
+/* --- Reusable component classes ------------------------------------------- */
+@layer components {
+  .gh-card {
+    @apply rounded-lg border border-[#30363d] bg-[#161b22] transition-colors;
+  }
+
+  .gh-card-hover {
+    @apply hover:border-[#2f81f7] hover:bg-[#1c2128];
+  }
+
+  .gh-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md
+           border border-[#30363d] bg-[#21262d] px-3 py-1.5 text-sm font-medium
+           text-[#e6edf3] transition-all
+           hover:bg-[#30363d] hover:border-[#8b949e]
+           active:translate-y-px
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .gh-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md
+           border border-[#238636] bg-[#238636] px-4 py-2 text-sm font-semibold
+           text-white transition-all
+           hover:bg-[#2ea043] hover:border-[#2ea043]
+           active:translate-y-px
+           disabled:opacity-50 disabled:cursor-not-allowed
+           shadow-[0_0_0_0_rgba(46,160,67,0)];
+  }
+
+  .gh-btn-primary:hover {
+    box-shadow: 0 0 0 4px rgba(46, 160, 67, 0.15);
+  }
+
+  .gh-input {
+    @apply w-full rounded-md border border-[#30363d] bg-[#0d1117]
+           px-3 py-2 text-sm text-[#e6edf3] placeholder-[#6e7681]
+           transition-colors
+           focus:outline-none focus:border-[#2f81f7]
+           focus:ring-2 focus:ring-[#2f81f7]/30;
+  }
+
+  .gh-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full
+           border px-2 py-0.5 text-xs font-medium;
+  }
+}
+
+/* --- Status colors --------------------------------------------------------- */
+.status-queued {
+  @apply border-[#9e6a03] bg-[#341a00] text-[#d29922];
+}
+.status-running {
+  @apply border-[#1f6feb] bg-[#0d2d6b] text-[#79c0ff];
+}
+.status-success {
+  @apply border-[#2ea043] bg-[#033a16] text-[#3fb950];
+}
+.status-failed {
+  @apply border-[#da3633] bg-[#3c0d0d] text-[#f85149];
+}
+.status-cloned {
+  @apply border-[#8957e5] bg-[#27115a] text-[#a371f7];
+}
+
+/* --- Animations ------------------------------------------------------------ */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fade-in-up 0.25s ease-out both;
+}
+
+@keyframes modal-pop {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-pop {
+  animation: modal-pop 0.18s ease-out both;
+}
+
+@keyframes backdrop-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.backdrop-fade {
+  animation: backdrop-fade 0.15s ease-out both;
+}
+
+/* Subtle terminal scanline effect for log panels */
+.terminal-bg {
+  background-color: #010409;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(110, 118, 129, 0.08) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+
+/* The "follow tail" indicator dot */
+@keyframes follow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.6); }
+  70%      { box-shadow: 0 0 0 8px rgba(63, 185, 80, 0); }
+}
+.follow-dot {
+  animation: follow-pulse 1.6s ease-out infinite;
+}
