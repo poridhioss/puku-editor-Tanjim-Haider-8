@@ -650,47 +650,7 @@ Reviewers pick the lowest severity that fits; authors don't need to act on `nit`
 
 ![Architecture](docs/architecture.svg)
 
-```
-┌────────────┐   POST /api/jobs        ┌─────────────────┐
-│  Browser   │ ──────────────────────► │  API Server     │
-│  (React)   │ ◄────────────────────── │   (Express)     │
-└────────────┘   201 {job}             └─────────────────┘
-                                           │  enqueue
-                                           ▼
-                                     ┌──────────────-┐
-                                     │ Redis (BullMQ │
-                                     │   build-queue)│
-                                     └──────────────-┘
-                                           │ dequeue
-                                           ▼
-                                     ┌──────────────┐
-                                     │ Worker       │
-                                     │ (no exposed  │
-                                     │  port)       │
-                                     └──────────────┘
-                                           │ POST /execute
-                                           ▼
-                                     ┌──────────────────-┐
-                                     │ Runner (privileged│
-                                     │  Docker executor) │
-                                     └──┬────────────┬──-┘
-                                        │            │
-                                  git clone      docker build
-                                        │            │
-                                        ▼            ▼
-                                  docker push      Docker Hub
-                                        │
-                        POST /api/logs  │ POST /api/status
-                                        ▼            ▼
-                                 ┌─────────────────────────┐
-                                 │ API Server + Socket.IO  │
-                                 └─────────────────────────┘
-                                        │  ws: log / status
-                                        ▼
-                                 ┌────────────┐
-                                 │  Browser   │
-                                 └────────────┘
-```
+
 
 ## Appendix B — Service Ports
 
