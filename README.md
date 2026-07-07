@@ -1,10 +1,13 @@
 # Mini GitHub Action
 
-> A miniature, self-hosted CI/CD platform that turns any Git repository into a published Docker image — paste a repo URL, watch live build logs, then copy a single `docker pull` command when it finishes.
+> A miniature, self-hosted CI platform that turns any Git repository into a published Docker image — paste a repo URL, watch live build logs, then copy a single `docker pull` command when it finishes.
 
-`demo-mini-github-action` is a from-scratch clone of the GitHub Actions experience rebuilt on Node.js, React, BullMQ, Socket.IO, and the Docker CLI. The system is split into five loosely-coupled services that together clone a repository, build a Docker image from its `Dockerfile`, push the image to Docker Hub, and stream the entire pipeline to a dashboard — all in real time, all behind one REST/WebSocket entry point.
+`mini-github-action` is a from-scratch clone of the GitHub Actions experience rebuilt on Node.js, React, BullMQ, Socket.IO, and the Docker CLI. The system is split into five loosely-coupled services that together clone a repository, build a Docker image from its `Dockerfile`, push the image to Docker Hub, and stream the entire pipeline to a dashboard — all in real time, all behind one REST/WebSocket entry point.
 
 The repository is itself a CI/CD project: GitHub Actions workflows (`ci.yml`, `cd.yml`, `e2e.yml`) validate, build, publish, and deploy the stack on every merge to `main`.
+
+![LandingPage](docs/landing_page.png)
+![Logs&Status](docs/logs_and_status.png)
 
 ---
 
@@ -29,7 +32,7 @@ The repository is itself a CI/CD project: GitHub Actions workflows (`ci.yml`, `c
 
 This project is built on a few beliefs that guide every architectural decision.
 
-**A real CI/CD system should be understandable in one diagram.** Six services — `frontend`, `server`, `worker`, `runner`, `redis` — form a linear pipeline. There are no circular dependencies and no hidden side effects. When something breaks, the diagram tells you where to look. Complexity hides in well-named modules, not in clever abstractions.
+**A real CI system should be understandable in one diagram.** Six services — `frontend`, `server`, `worker`, `runner`, `redis` — form a linear pipeline. There are no circular dependencies and no hidden side effects. When something breaks, the diagram tells you where to look. Complexity hides in well-named modules, not in clever abstractions.
 
 **Concerns should be physically separated.** Each service in this repo has one job and one entry point. The API server is the only service that accepts HTTP from clients. The worker is the only service that talks to BullMQ as a consumer. The runner is the only service that talks to the Docker daemon. The frontend is the only service that talks to Socket.IO. This keeps blast radius small: a misconfigured runner cannot corrupt the queue, and a slow build cannot slow down the dashboard.
 
@@ -99,11 +102,11 @@ Where it matters, dependencies are pinned to `^x.y.z` ranges and the lockfile (`
 
 ```
 demo-mini-github-action/
-├── frontend/          React + Vite + Tailwind dashboard (port 5173)
-├── server/            Express + Socket.IO + BullMQ producer (port 8000)
-├── worker/            BullMQ consumer (no exposed port)
-├── runner/            Privileged Docker executor (port 7001 → 7000)
-├── .github/workflows/ CI/CD for the project itself
+├── frontend/                React + Vite + Tailwind dashboard (port 5173)
+├── server/                  Express + Socket.IO + BullMQ producer (port 8000)
+├── worker/                  BullMQ consumer (no exposed port)
+├── runner/                  Privileged Docker executor (port 7000 → 7000)
+├── .github/workflows/       CI/CD for the project itself
 ├── docker-compose.yml       dev stack (builds from source)
 └── docker-compose.prod.yml  prod stack (pulls from Docker Hub)
 ```
@@ -281,7 +284,8 @@ Add a `console.log` in `server/socket/socket.js`'s `initSocket`: print `io.socke
 ### 7.1 Bring up the dev stack
 
 ```bash
-docker compose up --build
+docker compose up --build       #for development
+docker compose docker-compose.prod.yml up --build     #for production
 ```
 
 The first build will pull `redis:7`, install Node deps for all four services, and prepare the runner with `git` and `docker.io` (`runner/Dockerfile`). Subsequent starts are near-instant.
@@ -322,6 +326,11 @@ DOCKER_ACCESS_TOKEN=<your-dockerhub-access-token>
 ### 7.5 Required `frontend/.env`
 
 ```
+#dev mode
+VITE_API_URL=http://localhost:8000
+VITE_SOCKET_URL=http://localhost:8000
+
+#production mod
 VITE_API_URL=http://localhost:8000
 VITE_SOCKET_URL=http://localhost:8000
 ```
