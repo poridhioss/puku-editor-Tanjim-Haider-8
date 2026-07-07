@@ -648,6 +648,8 @@ Reviewers pick the lowest severity that fits; authors don't need to act on `nit`
 
 ## Appendix A — End-to-End Flow (visual)
 
+![Architecture](docs/architecture.svg)
+
 ```
 ┌────────────┐   POST /api/jobs        ┌─────────────────┐
 │  Browser   │ ──────────────────────► │  API Server     │
