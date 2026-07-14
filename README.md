@@ -38,41 +38,22 @@ It automates the repetitive process of fetching and building source code. Instea
 
 **In short:** A simplified, self-hosted alternative for understanding and performing automated CI workflows.
 
-This project is built on a few beliefs that guide every architectural decision.
-
-**A real CI system should be understandable in one diagram.** Six services — `frontend`, `server`, `worker`, `runner`, `redis` — form a linear pipeline. There are no circular dependencies and no hidden side effects. When something breaks, the diagram tells you where to look. Complexity hides in well-named modules, not in clever abstractions.
-
-**Concerns should be physically separated.** Each service in this repo has one job and one entry point. The API server is the only service that accepts HTTP from clients. The worker is the only service that talks to BullMQ as a consumer. The runner is the only service that talks to the Docker daemon. The frontend is the only service that talks to Socket.IO. This keeps blast radius small: a misconfigured runner cannot corrupt the queue, and a slow build cannot slow down the dashboard.
-
-**The user sees what's happening, as it happens.** Every stdout line from `git`, `docker build`, and `docker push` is forwarded immediately to the browser. The status badge transitions `queued → running → success` (or `failed`) live, with no need to refresh. The result is a tool you can trust, because you watched it work.
-
-**Job idempotency and isolation matter, even in demos.** Every job gets a unique workspace (`runner/workspace/<jobId>`), a unique image tag (`<docker-username>/<repo-name>:<jobId>`), and a unique ID. Two jobs never collide, even when submitted back-to-back.
 
 ---
 
-## 2. The Learning Science Behind Our Methods
+## 2. Architecture (End-to-End Flow)
 
-This section explains *how* the project is organized so future contributors (and readers of this code) can absorb it quickly. It draws on principles of chunking, progressive disclosure, and feedback loops.
+![Architecture](docs/architecture.svg)
 
-### 2.1 Chunking the system into five "labs"
+**Service Ports**
 
-Beginners absorb unfamiliar systems more easily when the system is split into small, mutually-intelligible pieces. Each of the five services in this repository is one such piece. You can understand any single service without reading the other four — every service has its own `package.json`, its own `Dockerfile`, and its own port. This is the same principle that makes a real lab bench work: instruments are isolated, so a noisy oscilloscope cannot drown out a quiet signal generator.
-
-### 2.2 Progressive disclosure of complexity
-
-Each module shows you only what you need to know to use it. `runner/services/git.service.js` exposes a single function, `cloneRepo(job)`, and hides the spawn-and-stream implementation behind it. The first time you read the system, you can ignore the implementation; once you need to extend the system, the implementation is right there. This is the "shell model" of a function: a small surface area for callers, a deep interior for maintainers.
-
-### 2.3 Immediate feedback through observables
-
-In cognitive science, immediate feedback is one of the strongest predictors of durable learning. This project operationalizes that idea in two ways. First, **build logs are streamed live** over Socket.IO, so the user sees the effect of each pipeline step as it happens. Second, **status transitions are observable**, so the user knows which stage produced which outcome. If a build fails, the UI tells you so within milliseconds of `docker build` exiting non-zero.
-
-### 2.4 Spaced repetition through CI
-
-The GitHub Actions workflows in `.github/workflows/` run the full system end-to-end on every push. Every merge is another exposure to the whole pipeline: clone, env files, build, health checks, cleanup. This is the CI equivalent of spaced repetition: a tiny cognitive load per exposure, repeated often enough that the system's shape becomes second nature.
-
-### 2.5 Mental-model alignment
-
-The directory layout of this repository is designed so the file structure mirrors the mental model. Queue producers live in `server/services/queue.service.js`; queue consumers live in `worker/`. Docker operations live in `runner/services/`. There is no magic; the layout is the truth.
+| Service  | Container port | Host port (dev) | Purpose                              |
+| -------- | -------------- | --------------- | ------------------------------------ |
+| frontend | `5173`         | `5173`          | Vite dev server / static preview.    |
+| server   | `8000`         | `8000`          | REST API + Socket.IO server.         |
+| runner   | `7000`         | `7001`          | Privileged build executor.           |
+| worker   | —              | —               | BullMQ consumer (internal only).     |
+| redis    | `6379`         | `6379`          | BullMQ broker.                       |
 
 ---
 
