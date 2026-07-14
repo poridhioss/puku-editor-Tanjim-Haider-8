@@ -20,7 +20,6 @@ The repository is itself a CI/CD project: GitHub Actions workflows (`ci.yml`, `c
 5. [API Reference](#5-api-reference)
 6. [Active Learning Techniques](#6-active-learning-techniques)
 7. [How to Run the Project](#7-how-to-run-the-project)
-<!-- 8. [Visual Elements](#8-visual-elements) -->
 8. [Quality Assurance](#8-quality-assurance)
 9. [Common Mistakes to Avoid](#9-common-mistakes-to-avoid)
 10. [Templates and Examples](#10-templates-and-examples)
