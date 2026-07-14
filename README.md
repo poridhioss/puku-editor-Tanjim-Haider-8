@@ -13,8 +13,8 @@ The repository is itself a CI/CD project: GitHub Actions workflows (`ci.yml`, `c
 
 ## Table of Contents
 
-1. [What is This?](#1-What-is-This?)
-2. [The Learning Science Behind Our Methods](#2-the-learning-science-behind-our-methods)
+1. [What is This?](#1-what-is-this?)
+2. [Architecture (End-to-End Flow)](#2-architecture-(end-to-end-flow))
 3. [Professional Standards](#3-professional-standards)
 4. [Lab Structure](#4-lab-structure)
 5. [Writing Style Guide](#5-writing-style-guide)
