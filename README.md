@@ -287,146 +287,178 @@ Add a `console.log` in `server/socket/socket.js`'s `initSocket`: print `io.socke
 
 ---
 
-## 7. Code and Commands
+## 7. How to Run the Project
 
-> All commands assume you are at the repository root unless otherwise stated.
+This section explains how to start the project, configure the required environment variables, submit a build, and run the generated Docker image.
 
-### 7.1 Bring up the dev stack
+### 7.1 Prerequisites
+
+Before starting, make sure you have:
+
+* Docker
+* Docker Compose
+* A Docker Hub account
+
+Clone the repository and enter the project folder:
 
 ```bash
-docker compose up --build       #for development
-docker compose docker-compose.prod.yml up --build     #for production
+git clone <repository-url>
+cd demo-mini-github-action
 ```
 
-The first build will pull `redis:7`, install Node deps for all four services, and prepare the runner with `git` and `docker.io` (`runner/Dockerfile`). Subsequent starts are near-instant.
+---
 
-Services and their ports:
+### 7.2 Create the Environment Files
 
-| Service     | Host port | Container port | URL                          |
-| ----------- | --------- | -------------- | ---------------------------- |
-| frontend    | `5173`    | `5173`         | http://localhost:5173        |
-| server      | `8000`    | `8000`         | http://localhost:8000        |
-| runner      | `7001`    | `7000`         | http://localhost:7001        |
-| redis       | `6379`    | `6379`         | redis://localhost:6379       |
+The project requires four `.env` files.
 
-### 7.2 Required `server/.env`
+#### `server/.env`
 
-```
+```env
 PORT=8000
 REDIS_HOST=redis
 ```
 
-### 7.3 Required `worker/.env`
+#### `worker/.env`
 
-```
+```env
 RUNNER_URL=http://runner:7000
 REDIS_HOST=redis
 ```
 
-### 7.4 Required `runner/.env`
+#### `runner/.env`
 
-```
+```env
 SERVER_URL=http://server:8000
 DOCKER_USERNAME=<your-dockerhub-username>
 DOCKER_ACCESS_TOKEN=<your-dockerhub-access-token>
 ```
 
-> ⚠️ The runner is `privileged: true` and mounts `/var/run/docker.sock`. Only run it on a machine you trust.
+#### `frontend/.env`
 
-### 7.5 Required `frontend/.env`
+For local development:
 
-```
-#dev mode
-VITE_API_URL=http://localhost:8000
-VITE_SOCKET_URL=http://localhost:8000
-
-#production mod
+```env
 VITE_API_URL=http://localhost:8000
 VITE_SOCKET_URL=http://localhost:8000
 ```
 
-### 7.6 Submit a build manually
+For deployment, replace `localhost` with your server's public IP address:
+
+```env
+VITE_API_URL=http://<server-public-ip>:8000
+VITE_SOCKET_URL=http://<server-public-ip>:8000
+```
+
+---
+
+### 7.3 Start the Project
+
+For local development:
 
 ```bash
-curl -X POST http://localhost:8000/api/jobs \
-  -H "Content-Type: application/json" \
-  -d '{
-    "repoUrl": "https://github.com/<owner>/<repo>.git",
-    "branch": "main"
-  }'
+docker compose up --build
 ```
 
-The response is a JSON document with the new `job.id`. Open `http://localhost:5173`, paste the same `repoUrl` again, and you'll see the job card appear.
+For production:
 
-### 7.7 Bring down the stack
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Docker will start all required services automatically:
+
+| Service  | Address                 |
+| -------- | ----------------------- |
+| Frontend | `http://localhost:5173` |
+| Server   | `http://localhost:8000` |
+| Runner   | `http://localhost:7001` |
+| Redis    | Port `6379`             |
+
+Open the frontend in your browser:
+
+```text
+http://localhost:5173
+```
+
+---
+
+### 7.4 Build a GitHub Repository
+
+From the frontend:
+
+1. Enter the GitHub repository URL.
+2. Enter the branch name, such as `main`.
+3. Submit the build.
+4. The job is added to the Redis queue.
+5. The worker sends the job to the runner.
+6. The runner clones the repository and builds its Docker image.
+7. Build logs and status updates appear on the dashboard.
+
+> The repository must contain a valid `Dockerfile`.
+
+---
+
+### 7.5 Pull the Generated Docker Image
+
+After a successful build, the system provides a command similar to:
+
+```bash
+docker pull <dockerhub-username>/<repository-name>:<job-id>
+```
+
+Example:
+
+```bash
+docker pull tanjim100/my-app:123456
+```
+
+If the Docker Hub repository is public, login is not required. For a private repository, log in first:
+
+```bash
+docker login
+```
+
+---
+
+### 7.6 Run the Generated Image
+
+Run the downloaded image:
+
+```bash
+docker run --rm -p <host-port>:<container-port> <image-name>
+```
+
+Example:
+
+```bash
+docker run --rm -p 3000:3000 tanjim100/my-app:123456
+```
+
+Use the container port exposed by the application's `Dockerfile`.
+
+---
+
+### 7.7 Stop the Project
+
+Stop all project containers:
+
+```bash
+docker compose down
+```
+
+To also remove project volumes:
 
 ```bash
 docker compose down -v
 ```
 
-The `-v` flag removes the `redis` volume and any cached workspace directories.
+> **Security note:** The runner has access to the host Docker daemon through `/var/run/docker.sock`. Run this system only on a trusted machine or isolated server.
 
-### 7.8 Pull the image your build produced
-
-After a successful build, the runner prints and the dashboard copies a command like:
-
-```bash
-docker pull <DOCKER_USERNAME>/<repo-name>:<jobId>
-docker run --rm -p 3000:3000 <DOCKER_USERNAME>/<repo-name>:<jobId>
-```
-
-Replace the ports with whatever your `Dockerfile` exposes.
 
 ---
 
-## 8. Visual Elements
-
-> The user-facing visuals follow GitHub Actions' design language. This section explains the rationale and the conventions used.
-
-### 8.1 Color tokens
-
-Defined as CSS custom properties at the top of `frontend/src/index.css`:
-
-| Token                | Hex        | Used for                            |
-| -------------------- | ---------- | ----------------------------------- |
-| `--gh-bg`            | `#0d1117`  | Page background.                    |
-| `--gh-bg-elevated`   | `#161b22`  | Cards, modal panels, header bar.    |
-| `--gh-border`        | `#30363d`  | Card borders, dividers.             |
-| `--gh-text`          | `#e6edf3`  | Body text.                          |
-| `--gh-text-muted`    | `#8b949e`  | Secondary text, metadata.           |
-| `--gh-accent`        | `#2f81f7`  | Primary brand / link hover.         |
-| `--status-queued`    | `#d29922`  | Yellow pill (waiting).              |
-| `--status-running`   | `#2f81f7`  | Blue pill (in progress, spinner).   |
-| `--status-success`   | `#3fb950`  | Green pill (finished OK).           |
-| `--status-failed`    | `#f85149`  | Red pill (error).                   |
-| `--status-cloned`    | `#a371f7`  | Purple pill (sub-state, e.g. cloned). |
-
-### 8.2 Status pill
-
-`StatusBadge.jsx` renders a pill with an icon and a label:
-
-- `queued` → 🕒 Clock + yellow.
-- `running` → 🔄 Loader (animated spin) + blue.
-- `success` → ✅ CheckCircle + green.
-- `failed` → ❌ XCircle + red.
-- `cloned` → 🔀 GitBranch + purple.
-
-### 8.3 Copy block
-
-`CopyBlock.jsx` is a code-style block with a "Copy" button in the top-right corner. After a successful copy, the button briefly turns green and shows "Copied". The fallback path uses a hidden `<textarea>` and `document.execCommand("copy")` for the few environments where `navigator.clipboard` is unavailable.
-
-### 8.4 Live tail indicator
-
-`LogsPanel.jsx` shows a small animated green dot next to the word "Live" whenever the log viewer is auto-scrolling to the bottom. When the user scrolls up to read history, the indicator switches to a static purple dot and the word becomes "Paused".
-
-### 8.5 Empty state
-
-When no jobs exist, `Home.jsx` renders an empty state with a centered icon, title, and a one-line description. The visual rhythm — large icon, single heading, one body sentence — is borrowed from GitHub's own empty states (e.g. `github.com/<user>?tab=repositories` when a user has none).
-
-### 8.6 Modal animation
-
-`JobModal.jsx` uses two layered CSS animations: `backdrop-fade` (0.15s opacity from 0 → 1 on the dim layer) and `modal-pop` (0.18s scale + translateY for the panel). Together they read as one fluid motion.
-
+## 8.
 ---
 
 ## 9. Quality Assurance
@@ -656,22 +688,5 @@ Reviewers pick the lowest severity that fits; authors don't need to act on `nit`
 
 ---
 
-## Appendix A — End-to-End Flow (visual)
-
-![Architecture](docs/architecture.svg)
-
-
-
-## Appendix B — Service Ports
-
-| Service  | Container port | Host port (dev) | Purpose                              |
-| -------- | -------------- | --------------- | ------------------------------------ |
-| frontend | `5173`         | `5173`          | Vite dev server / static preview.    |
-| server   | `8000`         | `8000`          | REST API + Socket.IO server.         |
-| runner   | `7000`         | `7001`          | Privileged build executor.           |
-| worker   | —              | —               | BullMQ consumer (internal only).     |
-| redis    | `6379`         | `6379`          | BullMQ broker.                       |
-
----
 
 _Built and maintained as a learning artifact for distributed systems, queue-backed workers, and live-streamed UX._
