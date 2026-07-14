@@ -56,6 +56,20 @@ It automates the repetitive process of fetching and building source code. Instea
 | worker   | —              | —               | BullMQ consumer (internal only).     |
 | redis    | `6379`         | `6379`          | BullMQ broker.                       |
 
+
+### 🛠️ Tech Stack
+
+| Category              | Technologies                                              |
+| --------------------- | --------------------------------------------------------- |
+| 🎨 **Frontend**       | React, Vite, Tailwind CSS, React Router, Socket.IO Client |
+| 🟢 **Server**         | Node.js, Express.js, Socket.IO, BullMQ, ioredis           |
+| 🟣 **Worker**         | Node.js, BullMQ, ioredis, Axios                           |
+| 🔵 **Runner**         | Node.js, Express.js, Axios, Git, Docker CLI               |
+| 🐳 **Infrastructure** | Docker, Docker Compose, Redis, Docker Hub                 |
+| 🚀 **CI Deployment**  | GitHub Actions, AWS EC2                                   |
+
+> The application follows a microservice-style architecture where Redis and BullMQ manage build jobs, the Runner builds Docker images, and Socket.IO provides real-time CI logs and status updates.
+
 ---
 
 ## 3. Features
