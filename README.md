@@ -57,31 +57,23 @@ It automates the repetitive process of fetching and building source code. Instea
 
 ---
 
-## 3. Professional Standards
+## 3. Features
 
-This codebase tries to look like the kind of code you'd find in a small production system. The conventions are not invented here — they are reused patterns from the Node.js, Docker, and GitHub Actions ecosystems.
-
-### 3.1 CommonJS in services, ESM in the frontend
-
-The four Node services (`server`, `worker`, `runner`) use CommonJS. They run in Docker containers where CommonJS remains the lowest-friction default, and `npm ci --omit=dev` works without ESM-specific bundling. The frontend uses ES modules because Vite, Tailwind, and modern React tooling all assume ESM.
-
-The `package.json` of each service contains a `"type": "commonjs"` (services) or `"type": "module"` (frontend) declaration so that the Node loader knows which parser to use. This is a small but important detail — using the wrong module type surfaces as opaque `require is not defined in ES module scope` errors when a file boundary crosses.
-
-### 3.2 One route file per resource
-
-REST endpoints are grouped by resource, not by HTTP verb. `server/routes/job.routes.js` exposes `POST /api/jobs` and `GET /api/jobs/:id`; `server/routes/log.routes.js` exposes `POST /api/logs`; etc. Each route file delegates to a controller file of the same name in `server/controllers/`. This is the standard MVC split that recruiters expect to see, and it makes route-level changes obvious.
-
-### 3.3 Names follow domain, not implementation
-
-Class and function names describe **what they do for the user**, not how they do it internally. `cloneRepo`, not `spawnGitProcess`. `pushImage`, not `dockerPushWrapper`. The implementation is the implementation; the name is the contract.
-
-### 3.4 Configuration via environment variables, not files
-
-Every runtime parameter the runner needs (`RUNNER_URL`, `DOCKER_USERNAME`, `DOCKER_ACCESS_TOKEN`, `SERVER_URL`) is injected through `.env` files and `process.env`. There is no hardcoded `localhost` in service code; defaults exist but are clearly marked (`|| "http://server:8000"`). This means the same image runs in dev (`docker-compose.yml`) and in prod (`docker-compose.prod.yml`) without code changes.
-
-### 3.5 Dependencies are pinned, not anchored
-
-Where it matters, dependencies are pinned to `^x.y.z` ranges and the lockfile (`package-lock.json`) is committed. Every Docker build uses `npm ci` (not `npm install`) so the CI runner installs exactly what the developer installed.
+- Git Repository Submission — Users can provide a Git repository URL and branch for building.
+- Automated Job Creation — Each build request is assigned a unique job ID.
+- Redis-Based Job Queue — Build jobs are queued and processed asynchronously.
+- Dedicated Worker Service — The worker retrieves jobs from the queue and assigns them to the runner.
+- Self-Hosted Runner — A custom runner executes the CI tasks on our own infrastructure.
+- Automatic Repository Cloning — The runner automatically clones the submitted repository.
+- Docker Image Building — The submitted project is automatically converted into a Docker image.
+- Isolated Build Execution — Docker provides isolated environments for different build jobs.
+- Real-Time Build Logs — Build progress and command output are sent to the frontend in real time.
+- Job Status Tracking — Users can monitor states such as queued, running, completed, or failed.
+- Microservice Architecture — The system is divided into Frontend, Server, Worker, Runner, and Redis services.
+- Dockerized Services — All major components run as Docker containers.
+- Internal Service Communication — Docker networking allows services to communicate using service names.
+- CI/CD for the Platform Itself — GitHub Actions automatically builds and deploys updates to the self-hosted CI platform on AWS EC2.
+- Environment-Based Configuration — Secrets and service URLs are managed using environment variables and GitHub Secrets.
 
 ---
 
