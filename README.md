@@ -13,7 +13,7 @@ The repository is itself a CI/CD project: GitHub Actions workflows (`ci.yml`, `c
 
 ## Table of Contents
 
-1. [Philosophy: Why This Approach](#1-philosophy-why-this-approach)
+1. [What is This?](#1-What-is-This?)
 2. [The Learning Science Behind Our Methods](#2-the-learning-science-behind-our-methods)
 3. [Professional Standards](#3-professional-standards)
 4. [Lab Structure](#4-lab-structure)
@@ -28,7 +28,15 @@ The repository is itself a CI/CD project: GitHub Actions workflows (`ci.yml`, `c
 
 ---
 
-## 1. Philosophy: Why This Approach
+## 1. What is This?
+
+This project is a **mini self-hosted Continuous Integration (CI) system**. A user submits a Git repository, and the system automatically creates a **job**, processes it through a **worker**, sends it to a **runner**, clones the repository, and builds the application as a **Docker image** while providing build **status and logs**.
+
+**Why do we need it?**
+
+It automates the repetitive process of fetching and building source code. Instead of relying entirely on third-party CI services, it provides control over the build infrastructure and demonstrates how real CI systems use **job queues, workers, runners, Docker, and real-time loggings**.
+
+**In short:** A simplified, self-hosted alternative for understanding and performing automated CI workflows.
 
 This project is built on a few beliefs that guide every architectural decision.
 
