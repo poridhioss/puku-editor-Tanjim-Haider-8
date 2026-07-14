@@ -333,6 +333,7 @@ SERVER_URL=http://server:8000
 DOCKER_USERNAME=<your-dockerhub-username>
 DOCKER_ACCESS_TOKEN=<your-dockerhub-access-token>
 ```
+put your dockerhub username and access token
 
 #### `frontend/.env`
 
