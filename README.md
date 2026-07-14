@@ -13,18 +13,19 @@ The repository is itself a CI/CD project: GitHub Actions workflows (`ci.yml`, `c
 
 ## Table of Contents
 
-1. [What is This?](#1-what-is-this?)
-2. [Architecture (End-to-End Flow)](#2-architecture-(end-to-end-flow))
-3. [Professional Standards](#3-professional-standards)
+1. [What is This?](#1-what-is-this)
+2. [Architecture (End-to-End Flow)](#2-architecture-end-to-end-flow)
+3. [Features](#3-features)
 4. [Lab Structure](#4-lab-structure)
-5. [Writing Style Guide](#5-writing-style-guide)
+5. [API Reference](#5-api-reference)
 6. [Active Learning Techniques](#6-active-learning-techniques)
-7. [Code and Commands](#7-code-and-commands)
-8. [Visual Elements](#8-visual-elements)
-9. [Quality Assurance](#9-quality-assurance)
-10. [Common Mistakes to Avoid](#10-common-mistakes-to-avoid)
-11. [Templates and Examples](#11-templates-and-examples)
-12. [Review Process](#12-review-process)
+7. [How to Run the Project](#7-how-to-run-the-project)
+<!-- 8. [Visual Elements](#8-visual-elements) -->
+8. [Quality Assurance](#8-quality-assurance)
+9. [Common Mistakes to Avoid](#9-common-mistakes-to-avoid)
+10. [Templates and Examples](#10-templates-and-examples)
+11. [Review Process](#11-review-process)
+12. [Project Roadmap](#12-project-roadmap)
 
 ---
 
@@ -221,35 +222,135 @@ DOCKER_ACCESS_TOKEN=<your-dockerhub-pat>
 
 ---
 
-## 5. Writing Style Guide
+## 5. API Reference
 
-> This section applies to code comments, commit messages, and the long-form sections of any future documentation.
+The system uses two HTTP APIs: the **Server API** for job management and the **Runner API** for executing CI jobs.
 
-### 5.1 Comments explain *why*, not *what*
+### 5.1 Server API
 
-Good code is largely self-documenting. A comment should only appear when the next reader would otherwise miss a constraint. Examples from this codebase:
+**Base URL:** `http://localhost:8000`
 
-> *"The runner mounts `/var/run/docker.sock` and runs `privileged: true` so it can spawn `docker build` against the host daemon."*
+| Method | Endpoint        | Description                           | Response Status |
+| ------ | --------------- | ------------------------------------- | --------------- |
+| `GET`  | `/`             | Check if the server is running        | `200 OK`        |
+| `GET`  | `/health`       | Get server health information         | `200 OK`        |
+| `POST` | `/api/jobs`     | Create and queue a new CI job         | `200 OK`        |
+| `GET`  | `/api/jobs/:id` | Get a job by its ID                   | `200 OK`        |
+| `POST` | `/api/logs`     | Add a build log to a job              | `200 OK`        |
+| `POST` | `/api/status`   | Update the status of a job            | `200 OK`        |
+| `POST` | `/api/image`    | Store the generated Docker image name | `200 OK`        |
 
-That kind of comment travels with the code. Comments like `// increment i` are noise.
+### 5.2 Create a CI Job
 
-### 5.2 Commit messages follow Conventional Commits
+**`POST /api/jobs`**
 
-We use `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, and `test:` prefixes. The body, when present, is wrapped at 72 characters and explains the motivation, not the diff.
+```json
+{
+  "repoUrl": "https://github.com/user/repo.git",
+  "branch": "main"
+}
+```
 
-### 5.3 Variable names mirror the domain
+**Response — `200 OK`**
 
-- `repoUrl`, not `u` or `input`.
-- `jobId`, not `id` (the prefix removes ambiguity in a multi-component system).
-- `imageName`, not `out` or `result`.
+```json
+{
+  "id": "1720953600000",
+  "repoUrl": "https://github.com/user/repo.git",
+  "branch": "main",
+  "status": "queued",
+  "logs": [],
+  "imageName": null
+}
+```
 
-### 5.4 Logs are first-class artifacts
+### 5.3 Get a Job
 
-Every line a user sees is tagged with `📦 Cloning repository…`, `🐳 Building Docker image …`, `✅ …`, etc. The emoji convention is intentional: it creates a visual rhythm in the logs that scans faster than text alone.
+**`GET /api/jobs/:id`**
 
-### 5.5 No silent failures
+**Response — `200 OK`**
 
-Every `try { await … } catch (err) { console.error(err) }` either retries, falls back, or surfaces the error to the UI. The runner's `executeJob` controller is the canonical example: it always calls `sendStatus(jobId, "failed")` in the catch block, never lets the job silently die.
+```json
+{
+  "id": "1720953600000",
+  "repoUrl": "https://github.com/user/repo.git",
+  "branch": "main",
+  "status": "running",
+  "logs": ["Cloning repository...", "Building Docker image..."],
+  "imageName": null
+}
+```
+
+### 5.4 Runner API
+
+**Base URL:** `http://localhost:7000`
+
+| Method | Endpoint   | Description                    | Response Status |
+| ------ | ---------- | ------------------------------ | --------------- |
+| `GET`  | `/`        | Check if the runner is running | `200 OK`        |
+| `GET`  | `/health`  | Get runner health information  | `200 OK`        |
+| `POST` | `/execute` | Accept and execute a CI job    | `200 OK`        |
+
+### 5.6 Execute a CI Job
+
+**`POST /execute`**
+
+```json
+{
+  "jobId": "1720953600000",
+  "repoUrl": "https://github.com/user/repo.git",
+  "branch": "main"
+}
+```
+
+**Response — `200 OK`**
+
+```json
+{
+  "accepted": true,
+  "jobId": "1720953600000"
+}
+```
+
+### 5.7 Job Status Values
+
+A CI job can have one of the following statuses:
+
+* `queued` — Waiting for the worker
+* `running` — Build is in progress
+* `success` — Build and image push completed successfully
+* `failed` — The CI pipeline failed
+
+### 5.8 WebSocket Events
+
+The Server uses Socket.IO to send real-time updates to the frontend.
+
+| Event    | Purpose                    |
+| -------- | -------------------------- |
+| `log`    | Sends real-time build logs |
+| `status` | Sends job status updates   |
+
+### 5.9 API Flow
+
+```text
+Client → POST /api/jobs
+             ↓
+        Redis Queue
+             ↓
+           Worker
+             ↓
+      POST /execute
+             ↓
+           Runner
+             ↓
+   Clone → Build → Push
+             ↓
+   Update Logs and Status
+             ↓
+ WebSocket → Frontend
+```
+
+> The Worker and Redis do not expose application APIs. They are used internally for background job processing and queue management.
 
 ---
 
@@ -458,71 +559,69 @@ docker compose down -v
 
 ---
 
-## 8.
----
 
-## 9. Quality Assurance
+## 8. Quality Assurance
 
 > Every layer has its own quality bar. The CI workflow enforces them.
 
-### 9.1 Frontend
+### 8.1 Frontend
 
 - ESLint (`eslint .`) is wired to `npm run lint` and runs in the default Vite scripts. Errors block the build.
 - The production build is verified with `npm run build`. We do not commit `dist/`.
 - Visual checks: open two browser tabs on the same job; both should show identical logs.
 
-### 9.2 Backend services
+### 8.2 Backend services
 
 - No automated tests are shipped yet; the trusted path is `ci.yml` running the full stack end-to-end and observing /health and a real build attempt.
 - A failing container logs to stderr; `docker compose logs` is the first stop in any investigation.
 
-### 9.3 End-to-end
+### 8.3 End-to-end
 
 `e2e.yml` is the explicit `workflow_dispatch` button you press when you want to verify a change against the dev compose stack without going through the prod images. Use it for any change that touches `server`, `worker`, or `runner`.
 
-### 9.4 Production
+### 8.4 Production
 
 `ci.yml` runs on every push/PR to `main`. `cd.yml` runs only when `ci.yml` succeeded, and only the `if: github.event.workflow_run.conclusion == 'success'` branch deploys. A broken main branch cannot accidentally reach the production EC2 host.
 
 ---
 
-## 10. Common Mistakes to Avoid
+## 9. Common Mistakes to Avoid
 
 > The fastest path through a codebase is knowing where its foot-guns live. Here are the ones in this project.
 
-### 10.1 Forgetting `privilegied: true` on the runner
+### 9.1 Forgetting `privilegied: true` on the runner
 
 If you remove `privileged: true` or the `/var/run/docker.sock` mount from `docker-compose.yml`, the runner will fail to start `docker build` with a permission error. There is no fallback path; the runner needs the host daemon.
 
-### 10.2 Hardcoding ports
+### 9.2 Hardcoding ports
 
 Every cross-service URL uses an environment variable. Resist the temptation to write `http://localhost:8000` inside the worker or runner — `localhost` inside a container refers to the container itself, not the host. Use `http://server:8000` (the Docker Compose service name) or the injected variable.
 
-### 10.3 Treating `jobStore` as durable
+### 9.3 Treating `jobStore` as durable
 
 `server/store/jobStore.js` is an in-memory `Map`. Restarting the server wipes every job. If you need persistence, back the store with Redis (`ioredis` is already a dep) or a database. Until then, do not assume a server restart preserves history.
 
-### 10.4 Using `Date.now()` as the only ID source
+### 9.4 Using `Date.now()` as the only ID source
 
 Two jobs submitted in the same millisecond collide. For demos this is fine, but for anything load-bearing, switch to `crypto.randomUUID()` or pass the ID back to the server from the client.
 
-### 10.5 Allowing `git clone` to run on an untrusted URL
+### 9.5 Allowing `git clone` to run on an untrusted URL
 
 If you expose this project publicly, the runner will `git clone` whatever URL is submitted. Add an allowlist in `server/controllers/job.controller.js` before doing so, or run the runner in a network namespace with no egress.
 
-### 10.6 Building non-Docker projects
+### 9.6 Building non-Docker projects
 
 The current pipeline assumes the repository contains a `Dockerfile`. If you submit a repo without one, `docker build` fails with a clear error. The `npm` build path (`runner/services/build.service.js`) is wired but commented out in `execute.controller.js`; turn it on if you want to support repos without a `Dockerfile`.
 
-### 10.7 Ignoring the modal listener lifecycle
+### 9.7 Ignoring the modal listener lifecycle
 
 `JobModal.jsx` and `JobCard.jsx` both register a `socket.on("status", handler)` listener. Each `useEffect` cleanup uses `socket.off("status", handler)` with its own handler reference, which works because Socket.IO matches by reference. If you refactor those handlers into a shared utility, double-check that the cleanup still references the same function so the listener is actually removed.
 
 ---
 
-## 11. Templates and Examples
+## 10. Templates and Examples
 
-### 11.1 README task recipe
+### 10.1 README task recipe
 
 ```markdown
 - id: <T-NNN>
@@ -536,7 +635,7 @@ The current pipeline assumes the repository contains a `Dockerfile`. If you subm
 
 Every change ships with a one-line title, the affected files, a risk classification, and a verification step.
 
-### 11.2 Component template (React)
+### 10.2 Component template (React)
 
 ```jsx
 import { useEffect, useState } from "react";
@@ -560,7 +659,7 @@ export default function ComponentName({ propA, propB }) {
 }
 ```
 
-### 11.3 Service template (Node)
+### 10.3 Service template (Node)
 
 ```js
 // services/<domain>.service.js
@@ -582,7 +681,7 @@ async function doThing(input) {
 module.exports = { doThing };
 ```
 
-### 11.4 API endpoint template
+### 10.4 API endpoint template
 
 ```js
 // controllers/<resource>.controller.js
@@ -605,7 +704,7 @@ router.post("/", c.action);
 module.exports = router;
 ```
 
-### 11.5 GitHub Actions workflow snippet
+### 10.5 GitHub Actions workflow snippet
 
 ```yaml
 name: Validate Service
@@ -628,11 +727,11 @@ jobs:
 
 ---
 
-## 12. Review Process
+## 11. Review Process
 
 > Code review is the place where the project gets its second brain. The patterns below keep reviews short, fair, and useful.
 
-### 12.1 Pull request template
+### 11.1 Pull request template
 
 ```markdown
 ### What does this change?
@@ -657,7 +756,7 @@ jobs:
 - [ ] At least one reviewer from the affected service
 ```
 
-### 12.2 Definition of Done
+### 11.2 Definition of Done
 
 A change is "done" when all of the following hold:
 
@@ -667,7 +766,7 @@ A change is "done" when all of the following hold:
 4. **The diff is reviewed** by at least one person who is not the author.
 5. **The commit history is clean** — squash fix-ups before merging.
 
-### 12.3 Severity rubric for comments
+### 11.3 Severity rubric for comments
 
 | Severity | When to use                                           | Example                                                              |
 | -------- | ----------------------------------------------------- | -------------------------------------------------------------------- |
@@ -678,13 +777,94 @@ A change is "done" when all of the following hold:
 
 Reviewers pick the lowest severity that fits; authors don't need to act on `nit`s.
 
-### 12.4 Release process
+### 11.4 Release process
 
 1. Merge feature branches into `main`.
 2. `ci.yml` runs and gates the `cd.yml` deploy.
 3. `cd.yml` builds the four images, pushes to Docker Hub, and deploys to the EC2 host.
 4. Watch the EC2 logs (`docker compose -f docker-compose.prod.yml logs -f`) for the first build submitted after the deploy.
 5. If anything looks wrong, `git revert` is preferable to `git reset --hard` — the CI will redeploy from the previous tag.
+
+---
+
+## 12. Project Roadmap
+
+The project currently focuses on building a lightweight, self-hosted **Continuous Integration (CI) system**. Automatic deployment (**CD**) is not currently implemented.
+
+### ✅ Phase 1 — Core CI Pipeline
+
+* Submit a Git repository URL
+* Create and queue CI jobs
+* Process jobs using a background worker
+* Clone the repository using a dedicated runner
+* Build Docker images
+* Push successful images to Docker Hub
+* Display real-time build logs and status
+
+### 🔧 Phase 2 — Build Reliability
+
+* Add build timeout and cancellation
+* Add automatic retry mechanisms
+* Improve error handling
+* Automatically clean build workspaces
+* Clean unused Docker images and build cache
+
+### 🧪 Phase 3 — Automated Testing
+
+* Run project tests before building the Docker image
+* Stop the pipeline when tests fail
+* Display test results in the dashboard
+
+### ⚡ Phase 4 — Multiple and Concurrent Runners
+
+* Support multiple runners
+* Run multiple builds concurrently
+* Track runner availability and health
+* Automatically assign jobs to available runners
+
+### 🔐 Phase 5 — Security and Isolation
+
+* Improve isolation for untrusted repositories
+* Add CPU and memory limits
+* Secure Docker credentials and environment variables
+* Add secrets management
+
+### 🚀 Phase 6 — Advanced CI Features
+
+* GitHub webhook integration
+* Automatic builds on Git push
+* Pull request build triggers
+* Private repository support
+* User authentication
+* Build history
+* Project-specific CI configuration
+* Build notifications
+
+### Future CI Flow
+
+```text
+Git Push / Pull Request
+          ↓
+Automatic Webhook Trigger
+          ↓
+Create CI Job
+          ↓
+Redis Job Queue
+          ↓
+Available Runner
+          ↓
+Clone Repository
+          ↓
+Run Tests and Checks
+          ↓
+Build Docker Image
+          ↓
+Push Image to Docker Registry
+          ↓
+Build Result
+```
+
+> **Current scope:** The project implements **Continuous Integration (CI)** only. Continuous Deployment (**CD**) can be added as a future extension.
 
 ---
 
