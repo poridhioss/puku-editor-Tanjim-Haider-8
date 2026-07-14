@@ -59,21 +59,21 @@ It automates the repetitive process of fetching and building source code. Instea
 
 ## 3. Features
 
-- Git Repository Submission — Users can provide a Git repository URL and branch for building.
-- Automated Job Creation — Each build request is assigned a unique job ID.
-- Redis-Based Job Queue — Build jobs are queued and processed asynchronously.
-- Dedicated Worker Service — The worker retrieves jobs from the queue and assigns them to the runner.
-- Self-Hosted Runner — A custom runner executes the CI tasks on our own infrastructure.
-- Automatic Repository Cloning — The runner automatically clones the submitted repository.
-- Docker Image Building — The submitted project is automatically converted into a Docker image.
-- Isolated Build Execution — Docker provides isolated environments for different build jobs.
-- Real-Time Build Logs — Build progress and command output are sent to the frontend in real time.
-- Job Status Tracking — Users can monitor states such as queued, running, completed, or failed.
-- Microservice Architecture — The system is divided into Frontend, Server, Worker, Runner, and Redis services.
-- Dockerized Services — All major components run as Docker containers.
-- Internal Service Communication — Docker networking allows services to communicate using service names.
-- CI/CD for the Platform Itself — GitHub Actions automatically builds and deploys updates to the self-hosted CI platform on AWS EC2.
-- Environment-Based Configuration — Secrets and service URLs are managed using environment variables and GitHub Secrets.
+- **Git Repository Submission** — Users can provide a Git repository URL and branch for building.
+- **Automated Job Creation** — Each build request is assigned a unique job ID.
+- **Redis-Based Job Queue** — Build jobs are queued and processed asynchronously.
+- **Dedicated Worker Service** — The worker retrieves jobs from the queue and assigns them to the runner.
+- **Self-Hosted Runner** — A custom runner executes the CI tasks on our own infrastructure.
+- **Automatic Repository** Cloning — The runner automatically clones the submitted repository.
+- **Docker Image Building** — The submitted project is automatically converted into a Docker image.
+- **Isolated Build Execution** — Docker provides isolated environments for different build jobs.
+- **Real-Time Build Logs** — Build progress and command output are sent to the frontend in real time.
+- **Job Status Tracking** — Users can monitor states such as queued, running, completed, or failed.
+- **Microservice Architecture** — The system is divided into Frontend, Server, Worker, Runner, and Redis services.
+- **Dockerized Services** — All major components run as Docker containers.
+- **Internal Service Communication** — Docker networking allows services to communicate using service names.
+- **CI/CD for the Platform Itself** — GitHub Actions automatically builds and deploys updates to the self-hosted CI platform on AWS EC2.
+- **Environment-Based Configuration** — Secrets and service URLs are managed using environment variables and GitHub Secrets.
 
 ---
 
@@ -83,13 +83,42 @@ It automates the repetitive process of fetching and building source code. Instea
 
 ```
 demo-mini-github-action/
-├── frontend/                React + Vite + Tailwind dashboard (port 5173)
-├── server/                  Express + Socket.IO + BullMQ producer (port 8000)
-├── worker/                  BullMQ consumer (no exposed port)
-├── runner/                  Privileged Docker executor (port 7000 → 7000)
-├── .github/workflows/       CI/CD for the project itself
-├── docker-compose.yml       dev stack (builds from source)
-└── docker-compose.prod.yml  prod stack (pulls from Docker Hub)
+├── .github/
+│   └── workflows/                  # GitHub Actions CI/CD workflows
+│
+├── docs/                           # Project documentation
+│
+├── frontend/                       # Frontend application
+│   ├── public/                     # Static assets
+│   └── src/
+│       ├── api/                    # API client code
+│       ├── assets/                 # Images and other assets
+│       ├── components/             # Reusable UI components
+│       ├── pages/                  # Page-level components
+│       └── socket/                 # WebSocket client logic
+│
+├── runner/                         # Self-hosted CI runner service
+│   ├── controllers/                # Request handlers
+│   ├── routes/                     # API route definitions
+│   └── services/                   # Build and execution logic
+│
+├── server/                         # Main backend API server
+│   ├── config/                     # Configuration files
+│   ├── controllers/                # Request handlers
+│   ├── routes/                     # API route definitions
+│   ├── services/                   # Business logic
+│   ├── socket/                     # WebSocket server logic
+│   └── store/                      # Job and application data storage
+│
+├── worker/                         # Background job worker
+│   ├── processors/                 # Job processing logic
+│   ├── queue/                      # Redis/BullMQ queue management
+│   └── services/                   # Worker service logic
+│
+├── docker-compose.yml              # Local development configuration
+├── docker-compose.prod.yml         # Production configuration
+├── .gitignore                      # Git ignored files
+└── README.md                       # Project overview and instructions
 ```
 
 ### 4.1 `frontend/` — the dashboard
