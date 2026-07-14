@@ -44,7 +44,7 @@ It automates the repetitive process of fetching and building source code. Instea
 
 ## 2. Architecture (End-to-End Flow)
 
-![Architecture](docs/architecture.svg)
+![Architecture](docs/CI_Architecture.drawio.svg)
 
 **Service Ports**
 
