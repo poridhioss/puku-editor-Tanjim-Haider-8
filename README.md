@@ -6,8 +6,11 @@
 
 The repository is itself a CI/CD project: GitHub Actions workflows (`ci.yml`, `cd.yml`, `e2e.yml`) validate, build, publish, and deploy the stack on every merge to `main`.
 
+Submit your git repository and run build. That's it. The website will do the rest of the work.
 ![LandingPage](docs/landing_page.png)
+This is your docker image that is pushed in the Docker Registry.
 ![Logs&Status](docs/logs_and_status.png)
+Copy the command and run on your `Terminal`.
 
 ---
 
@@ -43,7 +46,7 @@ It automates the repetitive process of fetching and building source code. Instea
 
 ## 2. Architecture (End-to-End Flow)
 
-![Architecture](docs/CI_Architecture.drawio.svg)
+![Architecture](docs/mini_github_architecture.drawio1.svg)
 
 **Service Ports**
 
