@@ -11,6 +11,18 @@ Submit your git repository and run build. That's it. The website will do the res
 This is your docker image that is pushed in the Docker Registry.
 ![Logs&Status](docs/logs_and_status.png)
 Copy the command and run on your `Terminal`.
+```
+docker pull <image_name>
+```
+To see the image,
+```
+docker images
+```
+Run the image
+```
+docker run -d -p 8080:80 <image_name>
+```
+Now browse http://localhost:8080
 
 ---
 
