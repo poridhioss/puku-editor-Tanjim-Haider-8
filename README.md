@@ -280,6 +280,10 @@ The system uses two HTTP APIs: the **Server API** for job management and the **R
 }
 ```
 
+![job-post1](docs/api/Screenshot%202026-07-20%20at%204.17.12 PM.png)
+![job-post2](docs/api/Screenshot%202026-07-20%20at%204.17.33 PM.png)
+![job-post3](docs/api/Screenshot%202026-07-20%20at%204.17.45 PM.png)
+
 ### 5.3 Get a Job
 
 **`GET /api/jobs/:id`**
