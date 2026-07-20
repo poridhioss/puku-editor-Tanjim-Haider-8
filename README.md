@@ -300,6 +300,8 @@ The system uses two HTTP APIs: the **Server API** for job management and the **R
   "imageName": null
 }
 ```
+![job-post4](docs/api/Screenshot%202026-07-20%20at%204.18.42 PM.png)
+![job-post5](docs/api/Screenshot%202026-07-20%20at%204.18.59 PM.png)
 
 ### 5.4 Runner API
 
@@ -331,6 +333,8 @@ The system uses two HTTP APIs: the **Server API** for job management and the **R
   "jobId": "1720953600000"
 }
 ```
+![job-post6](docs/api/Screenshot%202026-07-20%20at%204.54.40 PM.png)
+![job-post7](docs/api/Screenshot%202026-07-20%20at%204.55.55 PM.png)
 
 ### 5.7 Job Status Values
 
@@ -349,6 +353,10 @@ The Server uses Socket.IO to send real-time updates to the frontend.
 | -------- | -------------------------- |
 | `log`    | Sends real-time build logs |
 | `status` | Sends job status updates   |
+![job-post8](docs/api/Screenshot%202026-07-20%20at%204.16.20 PM.png)
+![job-post9](docs/api/Screenshot%202026-07-20%20at%204.16.55 PM.png)
+![job-post10](docs/api/Screenshot%202026-07-20%20at%204.15.42 PM.png)
+![job-post11](docs/api/Screenshot%202026-07-20%20at%204.16.00 PM.png)
 
 ### 5.9 API Flow
 
