@@ -6,23 +6,7 @@
 
 The repository is itself a CI/CD project: GitHub Actions workflows (`ci.yml`, `cd.yml`, `e2e.yml`) validate, build, publish, and deploy the stack on every merge to `main`.
 
-Submit your git repository and run build. That's it. The website will do the rest of the work.
-![LandingPage](docs/landing_page.png)
-This is your docker image that is pushed in the Docker Registry.
-![Logs&Status](docs/logs_and_status.png)
-Copy the command and run on your `Terminal`.
-```
-docker pull <image_name>
-```
-To see the image,
-```
-docker images
-```
-Run the image
-```
-docker run -d -p 8080:80 <image_name>
-```
-Now browse http://localhost:8080
+
 
 ---
 
@@ -768,11 +752,33 @@ jobs:
 
 ---
 
-## 11. Review Process
+## 11. How to use
+
+Submit your git repository and run build. That's it. The website will do the rest of the work.
+![LandingPage](docs/landing_page.png)
+This is your docker image that is pushed in the Docker Registry.
+![Logs&Status](docs/logs_and_status.png)
+Copy the command and run on your `Terminal`.
+```
+docker pull <image_name>
+```
+To see the image,
+```
+docker images
+```
+Run the image
+```
+docker run -d -p 8080:80 <image_name>
+```
+Now browse http://localhost:8080
+
+---
+
+## 12. Review Process
 
 > Code review is the place where the project gets its second brain. The patterns below keep reviews short, fair, and useful.
 
-### 11.1 Pull request template
+### 12.1 Pull request template
 
 ```markdown
 ### What does this change?
@@ -797,7 +803,7 @@ jobs:
 - [ ] At least one reviewer from the affected service
 ```
 
-### 11.2 Definition of Done
+### 12.2 Definition of Done
 
 A change is "done" when all of the following hold:
 
@@ -807,7 +813,7 @@ A change is "done" when all of the following hold:
 4. **The diff is reviewed** by at least one person who is not the author.
 5. **The commit history is clean** — squash fix-ups before merging.
 
-### 11.3 Severity rubric for comments
+### 12.3 Severity rubric for comments
 
 | Severity | When to use                                           | Example                                                              |
 | -------- | ----------------------------------------------------- | -------------------------------------------------------------------- |
@@ -818,7 +824,7 @@ A change is "done" when all of the following hold:
 
 Reviewers pick the lowest severity that fits; authors don't need to act on `nit`s.
 
-### 11.4 Release process
+### 12.4 Release process
 
 1. Merge feature branches into `main`.
 2. `ci.yml` runs and gates the `cd.yml` deploy.
@@ -828,7 +834,7 @@ Reviewers pick the lowest severity that fits; authors don't need to act on `nit`
 
 ---
 
-## 12. Project Roadmap
+## 13. Project Roadmap
 
 The project currently focuses on building a lightweight, self-hosted **Continuous Integration (CI) system**. Automatic deployment (**CD**) is not currently implemented.
 
